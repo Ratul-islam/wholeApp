@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { createPath, deletePathService, getAllPath } from "./path.services";
-import { sendError, sendSuccess } from "../../utils/responses";
-import { getUserBy } from "../user/user.service";
+import { createPath, deletePathService, getAllPath } from "./path.services.js";
+import { sendError, sendSuccess } from "../../utils/responses.js";
+import { getUserBy } from "../user/user.service.js";
 
 export const savePath = async (
     request: FastifyRequest,

@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
-import { SavedPath } from "./savedPath.model";
-import { Path } from "./path.model";
+import { SavedPath } from "./savedPath.model.js";
+import { Path } from "./path.model.js";
 
 function toObjectId(id: string) {
   if (!Types.ObjectId.isValid(id)) throw new Error("Invalid id");

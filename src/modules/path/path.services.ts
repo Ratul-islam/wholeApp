@@ -1,5 +1,5 @@
 import { Types } from "mongoose"
-import { Path } from "./path.model"
+import { Path } from "./path.model.js"
 
 export const createPath = async (userId: Types.ObjectId,name:string, path: any) => {
 

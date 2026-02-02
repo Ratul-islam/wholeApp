@@ -1,6 +1,5 @@
 import { Types } from "mongoose"
-import { Device } from "./device.model"
-import { Session } from "../sessions/sessions.model"
+import { Device } from "./device.model.js"
 
 export const isDeviceAvailable= async (userId:Types.ObjectId)=>{
     const data = await Device.findOne({userId})

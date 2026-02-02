@@ -1,8 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { connectedDevice } from "./device.services";
-import { sendError, sendSuccess } from "../../utils/responses";
-import { getSessionById } from "../sessions/sessions.services";
-import { getPathById } from "../path/path.services";
+import { connectedDevice } from "./device.services.js";
+import { sendError, sendSuccess } from "../../utils/responses.js";
+import { getPathById } from "../path/path.services.js";
 
 export const getDeviceStatus=async(req:FastifyRequest, reply:FastifyReply)=>{
 
@@ -17,8 +16,6 @@ export const getDeviceStatus=async(req:FastifyRequest, reply:FastifyReply)=>{
 
 
 export const loadPath=async(req:FastifyRequest, reply:FastifyReply, app:FastifyInstance)=>{
-
-    const user = (req.user as any).id;
 
     const {pathId, deviceId, deviceSecret} = (req.body as any)
     const path= await getPathById(pathId);

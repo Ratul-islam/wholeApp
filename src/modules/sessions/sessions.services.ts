@@ -1,6 +1,6 @@
 import { PipelineStage } from "mongoose";
 import { Types } from "mongoose";
-import { Session } from "./sessions.model";
+import { Session } from "./sessions.model.js";
 type sessionData={
       sessionId:string,
       userId:string,

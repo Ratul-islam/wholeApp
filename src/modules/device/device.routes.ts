@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { getDeviceStatus, loadPath } from "./device.controller";
-import { wsAdd, wsRemove } from "../ws/ws.hub";
-import { Device } from "./device.model";
+import { getDeviceStatus, loadPath } from "./device.controller.js";
+import { wsAdd, wsRemove } from "../ws/ws.hub.js";
+import { Device } from "./device.model.js";
 
 export default async function deviceRoutes(app: FastifyInstance) {
   app.get(

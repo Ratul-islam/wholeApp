@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { getUserProfile } from "./user.controller";
+import { getUserProfile } from "./user.controller.js";
 
 export default async function userRoutes(app: FastifyInstance) {
   app.get("/", { preHandler: [(app as any).verifyAccess] }, async (req, reply) => {

@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { savedPathService } from "./savedPath.service";
-import { sendError, sendSuccess } from "../../utils/responses";
+import { savedPathService } from "./savedPath.service.js";
+import { sendError, sendSuccess } from "../../utils/responses.js";
 
 export const savedPathController = {
   async save(req: FastifyRequest, res: FastifyReply) {

@@ -1,9 +1,9 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { getPathById } from "../path/path.services";
-import { sendError, sendSuccess } from "../../utils/responses";
-import { createSession, getAllSessionService, getLeaderboardByTotalScore } from "./sessions.services";
+import { getPathById } from "../path/path.services.js";
+import { sendError, sendSuccess } from "../../utils/responses.js";
+import { createSession, getAllSessionService, getLeaderboardByTotalScore } from "./sessions.services.js";
 import { Types } from "mongoose";
-import { connectDevice, isDeviceAvailable } from "../device/device.services";
+import { connectDevice, isDeviceAvailable } from "../device/device.services.js";
 
 export const startGameSession = async (
   req: FastifyRequest,

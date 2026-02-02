@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
-import { deletePath, getPath, savePath } from './path.controller'
-import { authenticateUser } from '../../middleware/auth.middleware'
-import { savedPathController } from './savedPath.controller'
+import { deletePath, getPath, savePath } from './path.controller.js'
+import { authenticateUser } from '../../middleware/auth.middleware.js'
+import { savedPathController } from './savedPath.controller.js'
 
 export default async function pathRoutes(app: FastifyInstance) {
   app.post(
@@ -44,7 +44,6 @@ export default async function pathRoutes(app: FastifyInstance) {
       await deletePath(request, reply)
     }
   )
-
   app.post(
     "/saved-paths",
     { preHandler: [(app as any).verifyAccess] },

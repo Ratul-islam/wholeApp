@@ -1,8 +1,8 @@
 import { Types } from "mongoose";
-import { getPathAllByUserId } from "../path/path.services";
-import { getAllSessionService, getUserStatsService } from "../sessions/sessions.services";
-import { getUserBy } from "./user.service";
-import { sendError } from "../../utils/responses";
+import { getPathAllByUserId } from "../path/path.services.js";
+import { getAllSessionService, getUserStatsService } from "../sessions/sessions.services.js";
+import { getUserBy } from "./user.service.js";
+import { sendError } from "../../utils/responses.js";
 
 
 export const getUserProfile = async (req: any, reply: any) => {

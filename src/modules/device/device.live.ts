@@ -1,5 +1,5 @@
-import { Device } from "../device/device.model";
-import { wsBroadcastToUser } from "../ws/ws.hub";
+import { Device } from "../device/device.model.js";
+import { wsBroadcastToUser } from "../ws/ws.hub.js";
 
 export async function pushDeviceSnapshotToUser(userId: string) {
   const device = await Device.findOne({ userId, isAvailable: false }).populate("sessionId");
