@@ -16,9 +16,11 @@ export const getUserProfile = async (req: any, reply: any) => {
 
     const user = await getUserBy({ id: userId }, {safe: true});
     if (!user) return sendError(reply, {statusCode: 404, message: "No user found"})
-      
+    const sameUser = userId ==  (req.user as any).id
+
+    console.log((req.user as any).id)
     const [paths, recentGames, stats] = await Promise.all([
-      getPathAllByUserId(userId),
+      getPathAllByUserId(userId, sameUser),
       getAllSessionService(userId,10),
       getUserStatsService(userId),
     ]);

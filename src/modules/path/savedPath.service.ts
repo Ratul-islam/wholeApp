@@ -24,7 +24,6 @@ export const savedPathService = {
     const userId = toObjectId(params.userId);
     const pathId = toObjectId(params.pathId);
 
-    // fetch original path to store snapshot + ownerId
     const original = await Path.findById(pathId).lean();
     if (!original) throw new Error("Path not found");
 
@@ -32,7 +31,6 @@ export const savedPathService = {
     const snapshotName = String(original.name ?? "");
     const snapshotPath = Array.isArray(original.path) ? original.path : [];
 
-    // upsert so calling save twice doesn't crash
     const doc = await SavedPath.findOneAndUpdate(
       { userId, pathId },
       {
@@ -80,8 +78,6 @@ export const savedPathService = {
         .lean(),
     ]);
 
-    // Try to rehydrate from the original Path if it still exists,
-    // otherwise use snapshot.
     const pathIds = rows.map((r) => r.pathId);
     const originals = await Path.find({ _id: { $in: pathIds } }).lean();
     const originalMap = new Map<string, any>(originals.map((p) => [String(p._id), p]));
@@ -97,7 +93,7 @@ export const savedPathService = {
         userId: String(r.userId),
         name: useLive ? String(live.name ?? "") : String(r.snapshotName ?? ""),
         path: useLive ? (Array.isArray(live.path) ? live.path : []) : (Array.isArray(r.snapshotPath) ? r.snapshotPath : []),
-        originDeleted: !useLive, // true means original missing now
+        originDeleted: !useLive,
         createdAt: String(r.createdAt ?? ""),
         updatedAt: String(r.updatedAt ?? ""),
       };
