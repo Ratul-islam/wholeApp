@@ -4,15 +4,16 @@ const SessionSchema = new mongoose.Schema(
   {
     sessionId: { type: String, required: true, unique: true, index: true },
     userId: { type: Types.ObjectId, required: true, index: true },
-
+    countedInLeaderboard: { type: Boolean, default: false, index: true },
     deviceId: { type: String, required: true, index: true },
     deviceSecret: { type: String, required: true },
-
-    pathId: { type: Types.ObjectId,  ref:"path" },
+    control: {type:String},
+    pathId: { type: Types.ObjectId, ref:"path" },
+    time: { type: Number },
 
     status: {
       type: String,
-      enum: ["starting", "preset_loaded","in_game", "completed", "abandoned"],
+      enum: ["starting", "paused", "preset_loaded","in_game", "completed", "abandoned"],
       default: "starting",
       index: true,
     },
@@ -27,7 +28,7 @@ const SessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-SessionSchema.index({ status: 1, userId: 1 });
+SessionSchema.index({ status: 1, userId: 1 ,time:1});
 SessionSchema.index({ score: -1 });
 
 

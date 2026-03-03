@@ -20,10 +20,11 @@ export const sendEmail = async (fastify: FastifyInstance, { to, subject, html }:
     },
   })
 
-  await transporter.sendMail({
+  const res =await transporter.sendMail({
     from: process.env.SMTP_FROM,
     to,
     subject,
     html,
   })
+  console.log(res)
 }

@@ -1,9 +1,9 @@
 import mongoose, { Types } from "mongoose"
 import { Path } from "./path.model.js"
 
-export const createPath = async (userId: Types.ObjectId,name:string, path: any, isPublic?:boolean) => {
+export const createPath = async (userId: Types.ObjectId,name:string, path: any, boardConf:string, isPublic?:boolean) => {
 
-  await Path.create({ userId, name, path , isPublic})
+  await Path.create({ userId, name, path , boardConf, isPublic})
 }
 
 type GetAllPathOptions = {
@@ -12,27 +12,30 @@ type GetAllPathOptions = {
   q?: string;
 };
 
+
+
 export const getAllPath = async (
   userId: Types.ObjectId,
   options: GetAllPathOptions = {}
 ) => {
   const page = Math.max(1, Number(options.page) || 1);
-  const limit = Math.max(1, Math.min(50, Number(options.limit) || 10)); 
+  const limit = Math.max(1, Math.min(50, Number(options.limit) || 10));
   const skip = (page - 1) * limit;
 
-  const query: any = { userId };
+  const query: Record<string, any> = { userId };
 
-  if (options.q && options.q.trim()) {
-    query.name = { $regex: options.q.trim(), $options: "i" };
+  if (options.q?.trim()) {
+    query.boardConf = options.q.trim();
   }
 
+  console.log(query);
+
   const [data, total] = await Promise.all([
-    Path.find(query)
-      .sort({ createdAt: -1 }) 
+    Path.find(query) // ✅ use full query object
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean(),
-
     Path.countDocuments(query),
   ]);
 
@@ -46,9 +49,10 @@ export const getAllPath = async (
     },
   };
 };
+
+
 export const getPathById = async (id: Types.ObjectId) => {
     const allPath = await Path.findOne({_id: id})
-    console.log(allPath)
      return allPath
 }
 

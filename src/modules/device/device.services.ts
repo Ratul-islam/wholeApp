@@ -8,6 +8,7 @@ export const isDeviceAvailable= async (userId:Types.ObjectId)=>{
 
 export const connectDevice = async (
   deviceId: string,
+  boardConf:string,
   deviceSecret: string,
   userId: Types.ObjectId,
   sessionId: Types.ObjectId
@@ -18,6 +19,7 @@ export const connectDevice = async (
     await Device.create({
       deviceId,
       deviceSecret,
+      boardConf,
       userId,
       sessionId,
       isAvailable: false,
@@ -42,6 +44,12 @@ export const freeDevice = async (deviceId: string) => {
 };
 
 export const connectedDevice=async(userId:Types.ObjectId)=>{
-  const res= await Device.findOne({userId}).populate("sessionId");
+  const res= await Device.findOne({userId}).populate("sessionId boardConf");
+
+  return res;
+}
+
+export const getDevicebyID=async(deviceId:string)=>{
+  const res= await Device.findOne({deviceId}).populate("sessionId");
   return res;
 }

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { getDeviceStatus, loadPath } from "./device.controller.js";
+import { getDeviceStatus, loadPath, pauseGame, resumeGame, startGame } from "./device.controller.js";
 import { wsAdd, wsRemove } from "../ws/ws.hub.js";
 import { Device } from "./device.model.js";
 
@@ -16,6 +16,28 @@ app.post(
     { preHandler: [(app as any).verifyAccess] },
     async (req, reply) => {
       return loadPath(req, reply, app);
+    }
+  );
+app.post(
+    "/start-game",
+    { preHandler: [(app as any).verifyAccess] },
+    async (req, reply) => {
+      return startGame(req, reply, app);
+    }
+  );
+
+app.post(
+    "/pause-game",
+    { preHandler: [(app as any).verifyAccess] },
+    async (req, reply) => {
+      return pauseGame(req, reply, app);
+    }
+  );
+app.post(
+    "/resume-game",
+    { preHandler: [(app as any).verifyAccess] },
+    async (req, reply) => {
+      return resumeGame(req, reply, app);
     }
   );
 

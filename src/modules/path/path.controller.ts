@@ -10,12 +10,14 @@ export const savePath = async (
     app: FastifyInstance
 ) => {
 
-    const { name, path, isPublic } = request.body as {
+    const { name, path, boardConf, isPublic } = request.body as {
       name: string,
       path: any,
+      boardConf: string,
       isPublic?: boolean
     }
-    await createPath((request as any).user.id, name , path, isPublic)
+
+    await createPath((request as any).user.id, name , path , boardConf,isPublic)
     sendSuccess(reply, {message: "path created successfully"})
 }
 
@@ -26,14 +28,13 @@ export const getPath = async (request: FastifyRequest, reply: FastifyReply) => {
   const user = await getUserBy({ id: userId });
   if (!user) return sendError(reply, { message: "No user found" });
 
-  const { page, limit, q } = (request.query as any) || {};
-
+  const { page, limit, boardConf } = (request.query as any) || {};
   const result = await getAllPath(userId, {
     page: page ? Number(page) : 1,
     limit: limit ? Number(limit) : 10,
-    q: typeof q === "string" ? q : undefined,
+    q: typeof boardConf === "string" ? boardConf : undefined,
   });
-
+  
   return sendSuccess(reply, {
     message: "paths fetched successfully",
     data: {

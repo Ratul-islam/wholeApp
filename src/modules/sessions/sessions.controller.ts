@@ -4,6 +4,7 @@ import { sendError, sendSuccess } from "../../utils/responses.js";
 import { createSession, getAllSessionService, getLeaderboardByTotalScore } from "./sessions.services.js";
 import { Types } from "mongoose";
 import { connectDevice, isDeviceAvailable } from "../device/device.services.js";
+import { getPathLeaderboard } from "../path/pathStatus.service.js";
 
 export const startGameSession = async (
   req: FastifyRequest,
@@ -13,10 +14,11 @@ export const startGameSession = async (
   const body = req.body as {
     deviceId: string;
     deviceSecret: string;
+    boardConf:string,
     path: Types.ObjectId;
   };
 
-  const { deviceId, deviceSecret, path } = body;
+  const { deviceId, deviceSecret, path , boardConf} = body;
 
   if (!deviceId || !deviceSecret) {
     return reply
@@ -45,14 +47,15 @@ export const startGameSession = async (
     userId,
     deviceId,
     deviceSecret,
+    control: "online",
     status: "starting",
   });
-  await connectDevice(deviceId, deviceSecret, userId, sessionDoc._id);
+  await connectDevice(deviceId,boardConf, deviceSecret, userId, sessionDoc._id);
 
   const topic = `devices/${deviceId}/${deviceSecret}/cmd`;
   const cmd = {
     type: "start_session",
-    session_id: sessionId,
+    session_id: sessionDoc._id,
     ts: Date.now(),
   };
 
@@ -73,11 +76,17 @@ export const getAllCompletedSession=async(req:FastifyRequest, reply:FastifyReply
     }
 }
 
-
 export const leaderboardController = async (req: any, reply: any) => {
-  const page = Number(req.query?.page ?? 1);
-  const limit = Number(req.query?.limit ?? 10);
+  const page = Math.max(1, Number(req.query?.page ?? 1));
+  const limit = Math.max(1, Number(req.query?.limit ?? 10));
+  const type = String(req.query?.type ?? "games").toLowerCase();
 
-  const result = await getLeaderboardByTotalScore({ page, limit });
-  return reply.send(result);
+  let result;
+  if (type === "games") {
+    result = await getLeaderboardByTotalScore({ page, limit });
+  } else {
+    result = await getPathLeaderboard({ page, limit });
+  }
+  
+  return sendSuccess(reply ,{data: result});
 };

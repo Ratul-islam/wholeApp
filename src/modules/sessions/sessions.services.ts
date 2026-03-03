@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { Session } from "./sessions.model.js";
 type sessionData={
       sessionId:string,
+      control:string,
       userId:string,
       deviceId:string,
       deviceSecret:string,
@@ -11,9 +12,9 @@ type sessionData={
 }
 export const createSession=async(payload:sessionData)=>{
     const session =await Session.create(payload);
+    console.log(session)
     return session;
 }
-
 
 export const getAllSessionService = async (userId: Types.ObjectId, limit:number) => {
 
@@ -21,25 +22,65 @@ export const getAllSessionService = async (userId: Types.ObjectId, limit:number)
     .sort({ endedAt: -1, createdAt: -1 })
     .limit(limit)
     .lean();
-
   return games;
 };
 
 export const getSessionById= async(id: Types.ObjectId)=>{
-    const data= await Session.find({_id:id, status: "starting"}).populate("pathId");
+    const data= await Session.findOne({_id:id, status: "starting"}).populate("pathId");
     return data;
 }
 
+export type SessionDoc = InstanceType<typeof Session>;
+
+const ALLOWED_UPDATES = new Set([
+  "status",
+  "score",
+  "correct",
+  "wrong",
+  "startedAt",
+  "endedAt",
+  "pathId",
+  "time",
+]);
+
+export const updateSessionDoc = async (
+  session: any,
+  updates: Partial<{
+    status: "starting" | "paused" | "preset_loaded" | "in_game" | "completed" | "abandoned";
+    score: number;
+    correct: number;
+    wrong: number;
+    control:string;
+    startedAt: Date | string;
+    endedAt: Date | string;
+    pathId: Types.ObjectId;
+    time: number;
+  }>
+) => {
+  if (!session) throw new Error("Session doc is required");
+  if (!updates || typeof updates !== "object") throw new Error("updates must be an object");
+
+  for (const [key, val] of Object.entries(updates)) {
+    if (!ALLOWED_UPDATES.has(key)) continue;
+    if (val === undefined) continue;
+    (session as any)[key] = val;
+  }
+
+  await session.save();
+  return session;
+};
 
 
 type LeaderboardParams = {
   page?: number;
   limit?: number;
+  type?:string;
 };
 
 export const getLeaderboardByTotalScore = async ({
   page = 1,
   limit = 10,
+  type
 }: LeaderboardParams) => {
   const safePage = Math.max(1, Math.floor(page));
   const safeLimit = Math.min(50, Math.max(1, Math.floor(limit)));
@@ -95,8 +136,6 @@ export const getLeaderboardByTotalScore = async ({
   const totalPages = Math.max(1, Math.ceil(total / safeLimit));
 
   return {
-    status: "success" as const,
-    message: "Leaderboard loaded",
     data: (result?.data ?? []).map((row: any, index: number) => ({
       userId: row._id,
       username: row.user?.firstName,

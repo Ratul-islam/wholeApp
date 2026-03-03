@@ -1,4 +1,3 @@
-// application.ts
 import Fastify from "fastify";
 import AutoLoad from "@fastify/autoload";
 import path from "node:path";
@@ -21,17 +20,30 @@ await app.register(websocket);
 
   await app.register(mqttPlugin);
 
-  await app.register(AutoLoad, {
-    dir: path.join(__dirname, "plugins"),
-    encapsulate: false,
-    matchFilter: (p) => (isProd ? p.endsWith(".js") : p.endsWith(".ts")),
-  });
+  // await app.register(AutoLoad, {
+  //   dir: path.join(__dirname, "plugins"),
+  //   encapsulate: false,
+  //   matchFilter: (p) => (isProd ? p.endsWith(".js") : p.endsWith(".ts")),
+  // });
+
+  // await app.register(AutoLoad, {
+  //   dir: path.join(__dirname, "modules"),
+  //   matchFilter: (p) => (isProd ? p.endsWith(".routes.js") : p.endsWith(".routes.ts")),
+  //   options: { prefix: "/api/v1" },
+  // });
 
   await app.register(AutoLoad, {
-    dir: path.join(__dirname, "modules"),
-    matchFilter: (p) => (isProd ? p.endsWith(".routes.js") : p.endsWith(".routes.ts")),
-    options: { prefix: "/api/v1" },
-  });
+  dir: path.join(__dirname, "plugins"),
+  encapsulate: false,
+  matchFilter: (p) => p.endsWith(".ts") || p.endsWith(".js"),
+});
+
+await app.register(AutoLoad, {
+  dir: path.join(__dirname, "modules"),
+  matchFilter: (p) =>
+    p.endsWith(".routes.ts") || p.endsWith(".routes.js"),
+  options: { prefix: "/api/v1" },
+});
 
   app.ready(() => {
     console.log("\n" + app.printRoutes());

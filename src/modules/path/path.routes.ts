@@ -10,10 +10,14 @@ export default async function pathRoutes(app: FastifyInstance) {
       schema: {
         body: {
           type: 'object',
-          required: ['name', 'path'],
+          required: ['name', 'path', 'boardConf'],
           properties: {
             name: { type: 'string', minLength: 2 },
-            path: { type: 'array' },
+            path: { type: 'array' }, 
+            // boardConf: {
+            //   type: "string",
+            //   enum: ["4x5", "2x5"]
+            // }
           },
         },
       },
