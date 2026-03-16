@@ -23,7 +23,6 @@ export async function countSessionTowardLeaderboard(sessionId: Types.ObjectId) {
       );
 
       if (!s) {
-        // helpful debug: show why it didn't match
         const exists = await Session.findById(sessionId).lean();
         console.log("Leaderboard count skipped. Session exists?", !!exists, {
           sessionId: String(sessionId),
@@ -59,24 +58,26 @@ type LeaderboardParams = {
   page?: number;
   limit?: number;
   type?: string;
+  boardConf: String;
 };
 
 export const getPathLeaderboard = async ({
   page = 1,
   limit = 10,
+  boardConf,
 }: LeaderboardParams) => {
+
+
   const safePage = Math.max(1, Math.floor(page));
   const safeLimit = Math.min(50, Math.max(1, Math.floor(limit)));
   const skip = (safePage - 1) * safeLimit;
 
-  const pipeline: PipelineStage[] = [
-    // Ensure pathId exists
-    { $match: { pathId: { $ne: null } } } as PipelineStage.Match,
-
-    // Sort first (optional — see note below)
-    { $sort: { plays: -1, lastPlayedAt: -1 } } as PipelineStage.Sort,
-
-    // Populate path
+  const [result] = await PathStats.aggregate([
+    {
+      $match: {
+        pathId: { $ne: null },
+      },
+    },
     {
       $lookup: {
         from: "paths",
@@ -84,38 +85,35 @@ export const getPathLeaderboard = async ({
         foreignField: "_id",
         as: "path",
       },
-    } as PipelineStage.Lookup,
-
+    },
     {
-      $unwind: {
-        path: "$path",
-        preserveNullAndEmptyArrays: false, // IMPORTANT
-      },
-    } as PipelineStage.Unwind,
-
-    // ✅ Only include public paths
+      $unwind: "$path",
+    },
     {
       $match: {
         "path.isPublic": true,
+        "path.boardConf": boardConf,
       },
-    } as PipelineStage.Match,
-
+    },
+    {
+      $sort: {
+        plays: -1,
+        lastPlayedAt: -1,
+      },
+    },
     {
       $facet: {
         data: [{ $skip: skip }, { $limit: safeLimit }],
         totalCount: [{ $count: "count" }],
       },
-    } as PipelineStage.Facet,
-  ];
-
-  const [result] = await PathStats.aggregate(pipeline);
-
+    },
+  ]);
   const total = result?.totalCount?.[0]?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / safeLimit));
 
   return {
     data: (result?.data ?? []).map((row: any, index: number) => ({
-      pathId: row.path, // fully populated public path
+      pathId: row.path,
       plays: row.plays ?? 0,
       completed: row.completed ?? 0,
       abandoned: row.abandoned ?? 0,

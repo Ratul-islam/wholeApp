@@ -1,8 +1,9 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { createPath, deletePathService, getAllPath, updatePathService } from "./path.services.js";
+import { createPath, deletePathService, getAllPath, getPathById, updatePathService } from "./path.services.js";
 import { sendError, sendSuccess } from "../../utils/responses.js";
 import { getUserBy } from "../user/user.service.js";
 import mongoose from "mongoose";
+import { countSessionsByPath, getSessionsByPathPaginated } from "../sessions/sessions.services.js";
 
 export const savePath = async (
     request: FastifyRequest,
@@ -22,6 +23,54 @@ export const savePath = async (
 }
 
 
+export const getPathDetails = async (request: FastifyRequest, reply: FastifyReply) => {
+  const userId = (request as any).user?.id;
+  const pathId = (request as any).params.pathId;
+
+  const query = (request as any).query ?? {};
+  const page = Math.max(Number(query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
+  const skip = (page - 1) * limit;
+
+  const path = await getPathById(pathId);
+  if (!path) {
+    return sendError(reply, {
+      message: "No such path exists",
+      statusCode: 404,
+    });
+  }
+
+  if (path.isPublic === false && String(path.userId._id) !== String(userId)) {
+    return sendError(reply, {
+      message: "path isnt public to view",
+      statusCode: 403,
+    });
+  }
+
+  const [matches, total] = await Promise.all([
+    getSessionsByPathPaginated(path._id, { skip, limit }),
+    countSessionsByPath(path._id),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return sendSuccess(reply, {
+    data: {
+      path,
+      matches,
+      meta: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+    }
+  });
+};
+
+
 export const getPath = async (request: FastifyRequest, reply: FastifyReply) => {
   const userId = (request as any).user?.id;
 
@@ -29,6 +78,7 @@ export const getPath = async (request: FastifyRequest, reply: FastifyReply) => {
   if (!user) return sendError(reply, { message: "No user found" });
 
   const { page, limit, boardConf } = (request.query as any) || {};
+
   const result = await getAllPath(userId, {
     page: page ? Number(page) : 1,
     limit: limit ? Number(limit) : 10,

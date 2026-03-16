@@ -27,6 +27,24 @@ export default async function authRoutes(app: FastifyInstance) {
     }
   )
 
+   app.post(
+    '/exists',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['email'],
+          properties: {
+            email: { type: 'string', format: 'email' },
+          },
+        },
+      },
+    },
+    async (request, reply)=>{ 
+      await authController.checkExistance(request, reply)
+    }
+  )
+
   app.post(
     '/verify',
     {

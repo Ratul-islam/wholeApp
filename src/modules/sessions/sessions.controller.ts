@@ -42,6 +42,7 @@ export const startGameSession = async (
   const sessionId = `s_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   
   
+  
   const sessionDoc = await createSession({
     sessionId,
     userId,
@@ -80,12 +81,15 @@ export const leaderboardController = async (req: any, reply: any) => {
   const page = Math.max(1, Number(req.query?.page ?? 1));
   const limit = Math.max(1, Number(req.query?.limit ?? 10));
   const type = String(req.query?.type ?? "games").toLowerCase();
+  const boardConf = req.query.boardConf;
+
+  console.log(boardConf)
 
   let result;
   if (type === "games") {
     result = await getLeaderboardByTotalScore({ page, limit });
   } else {
-    result = await getPathLeaderboard({ page, limit });
+    result = await getPathLeaderboard({ page, limit , boardConf});
   }
   
   return sendSuccess(reply ,{data: result});

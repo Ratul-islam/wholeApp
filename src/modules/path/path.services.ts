@@ -28,17 +28,15 @@ export const getAllPath = async (
     query.boardConf = options.q.trim();
   }
 
-  console.log(query);
 
   const [data, total] = await Promise.all([
-    Path.find(query) // ✅ use full query object
+    Path.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean(),
     Path.countDocuments(query),
   ]);
-
   return {
     data,
     meta: {

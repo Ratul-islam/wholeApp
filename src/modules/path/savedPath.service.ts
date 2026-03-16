@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { SavedPath } from "./savedPath.model.js";
 import { Path } from "./path.model.js";
+import path from "node:path";
 
 function toObjectId(id: string) {
   if (!Types.ObjectId.isValid(id)) throw new Error("Invalid id");
@@ -52,8 +53,7 @@ export const savedPathService = {
   async unsavePath(params: { userId: string; pathId: string }) {
     const userId = toObjectId(params.userId);
     const pathId = toObjectId(params.pathId);
-
-    await SavedPath.deleteOne({ userId, pathId });
+    await SavedPath.deleteOne({ userId, _id: pathId });
     return { ok: true };
   },
 

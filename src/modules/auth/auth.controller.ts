@@ -46,6 +46,24 @@ export const verify = async (request: FastifyRequest, reply: FastifyReply) => {
     return sendError(reply, { message: err.message })
   }
 }
+
+export const checkExistance = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { email } = request.body as {
+      email: string
+    }
+    
+    const result = await getUserBy({email})
+
+    if(result){
+      return sendSuccess(reply, { message: "user found", data: result })
+    }
+
+    return sendError(reply, { message: "no user associated with the email", statusCode:404 })
+  } catch (err: any) {
+    return sendError(reply, { message: err.message })
+  }
+}
 export const login = async (
   request: FastifyRequest,
   reply: FastifyReply,

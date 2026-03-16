@@ -1,6 +1,8 @@
 import { PipelineStage } from "mongoose";
 import { Types } from "mongoose";
 import { Session } from "./sessions.model.js";
+
+
 type sessionData={
       sessionId:string,
       control:string,
@@ -17,7 +19,6 @@ export const createSession=async(payload:sessionData)=>{
 }
 
 export const getAllSessionService = async (userId: Types.ObjectId, limit:number) => {
-
   const games = await Session.find({ userId, status: "completed" })
     .sort({ endedAt: -1, createdAt: -1 })
     .limit(limit)
@@ -211,4 +212,26 @@ export const getUserStatsService = async (userId: string) => {
       lastPlayedAt: null,
     }
   );
+};
+
+
+
+
+
+export const getSessionsByPathPaginated = async (
+  pathId: Types.ObjectId,
+  opts: { skip: number; limit: number }
+) => {
+  const { skip, limit } = opts;
+
+  return Session.find({ pathId, status: "completed" })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .populate("userId")
+    .lean();
+};
+
+export const countSessionsByPath = async (pathId: Types.ObjectId) => {
+  return Session.countDocuments({ pathId });
 };
