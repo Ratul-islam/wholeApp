@@ -4,7 +4,6 @@ import { Session } from "./sessions.model.js";
 
 
 type sessionData={
-      sessionId:string,
       control:string,
       userId:string,
       deviceId:string,

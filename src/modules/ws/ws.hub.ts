@@ -28,7 +28,6 @@ export function wsBroadcastToUser(userId: string, event: any) {
   const set = userSockets.get(userId);
 
   if (!set) return;
-  console.log(set)
   const msg = JSON.stringify(event);
   console.log(msg)
 

@@ -9,6 +9,8 @@ export const getDeviceStatus=async(req:FastifyRequest, reply:FastifyReply)=>{
 
     const user = (req.user as any).id;
     const res= await connectedDevice(user)
+    console.log("res")
+    console.log(res)
 
     if(res){
         return sendSuccess(reply, {data: res})
@@ -22,9 +24,16 @@ export const loadPath= async(req:FastifyRequest, reply:FastifyReply, app:Fastify
     const {pathId, id} = (req.body as any)
     const path= await getPathById(pathId);
     const session =await getSessionById(id);
+    console.log(session)
+    
+
 
     if(!path) return sendError(reply,{message:"no such path found"})
-      const topic = `devices/${session?.deviceId}/${session?.deviceSecret}/cmd`;
+
+      if(!session) return sendError(reply,{message:"no such game found"})
+        console.log("gg")
+    if(session.control=="manual") return sendError(reply,{message: "device is in manual mode"});
+    const topic = `devices/${session?.deviceId}/${session?.deviceSecret}/cmd`;
     const cmd = {
       type: "preset",
       path: path.path,
@@ -81,6 +90,20 @@ export const resumeGame= async(req:FastifyRequest, reply:FastifyReply, app:Fasti
   const topic = `devices/${deviceId}/${deviceSecret}/cmd`;
   const cmd = {
     type: "resume_game",
+    ts: Date.now(),
+  };
+
+  app.mqtt.publish(topic, JSON.stringify(cmd), { qos: 1 });
+
+  return sendSuccess(reply, {message: "Resume game"})
+}
+export const endGame = async(req:FastifyRequest, reply:FastifyReply, app:FastifyInstance)=>{
+
+  const {deviceId, deviceSecret} = (req.body as any)
+
+  const topic = `devices/${deviceId}/${deviceSecret}/cmd`;
+  const cmd = {
+    type: "end_game",
     ts: Date.now(),
   };
 

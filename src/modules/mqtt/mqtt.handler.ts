@@ -5,7 +5,6 @@ import { wsBroadcastToUser } from "../ws/ws.hub.js";
 import { countSessionTowardLeaderboard } from "../path/pathStatus.service.js";
 
 function parseDeviceIdFromTopic(topic: string) {
-  // devices/{deviceId}/{secret}/status OR devices/{deviceId}/{secret}/events
   const parts = String(topic).split("/");
   if (parts[0] !== "devices") return "";
   return parts[1] ?? "";
@@ -42,6 +41,7 @@ export async function handleMqttMessage(topic: string, msg: any) {
       // console.log("freeDevice:", res);
     }
 
+
     
     await broadcastDeviceByDeviceId(deviceId);
     return;
@@ -50,12 +50,14 @@ export async function handleMqttMessage(topic: string, msg: any) {
   if (msg.type === "session_started" && msg.session_id) {
     const upd = await Session.updateOne(
       { _id: msg.session_id },
-      { $set: { status: "in_game" } }
+      { $set: { status: "connected" } }
     );
 
     await broadcastDeviceByDeviceId(deviceId);
     return;
   }
+
+
   if (msg.type === "pause_game" && msg.session_id) {
     const upd = await Session.updateOne(
       { _id: msg.session_id },
@@ -65,6 +67,8 @@ export async function handleMqttMessage(topic: string, msg: any) {
     await broadcastDeviceByDeviceId(deviceId);
     return;
   }
+
+
   if (msg.type === "resume_game" && msg.session_id) {
     const upd = await Session.updateOne(
       { _id: msg.session_id },
@@ -74,6 +78,8 @@ export async function handleMqttMessage(topic: string, msg: any) {
     await broadcastDeviceByDeviceId(deviceId);
     return;
   }
+
+
   if (msg.type === "preset_loaded" && msg.session_id) {
     const upd = await Session.updateOne(
       { _id: msg.session_id },
@@ -83,6 +89,8 @@ export async function handleMqttMessage(topic: string, msg: any) {
     await broadcastDeviceByDeviceId(deviceId);
     return;
   }
+
+
 
   if (msg.type === "score_update" && msg.session_id) {
 
@@ -103,6 +111,8 @@ export async function handleMqttMessage(topic: string, msg: any) {
     return;
   }
 
+
+
   if (msg.type === "board_mode" && msg.session_id) {
   const upd = await Session.updateOne(
     { _id: msg.session_id },
@@ -119,6 +129,7 @@ export async function handleMqttMessage(topic: string, msg: any) {
   await broadcastDeviceByDeviceId(deviceId);
   return;
 }
+
 
   if (msg.type === "session_end" && msg.session_id) {
     const upd = await Session.updateOne(
@@ -137,13 +148,12 @@ export async function handleMqttMessage(topic: string, msg: any) {
 
 
     await countSessionTowardLeaderboard(msg.session_id);
+    await broadcastDeviceByDeviceId(deviceId);
 
     if (deviceId) {
       const res = await freeDevice(deviceId);
-      console.log("freeDevice:", res);
     }
 
-    await broadcastDeviceByDeviceId(deviceId);
     return;
   }
 }

@@ -1,24 +1,23 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { getPathById } from "../path/path.services.js";
 import { sendError, sendSuccess } from "../../utils/responses.js";
-import { createSession, getAllSessionService, getLeaderboardByTotalScore } from "./sessions.services.js";
+import { createSession, getAllSessionService, getLeaderboardByTotalScore, updateSessionDoc } from "./sessions.services.js";
 import { Types } from "mongoose";
-import { connectDevice, isDeviceAvailable } from "../device/device.services.js";
+import { connectDevice, freeDevice, isDeviceAvailable } from "../device/device.services.js";
 import { getPathLeaderboard } from "../path/pathStatus.service.js";
+import { waitForMqttResponse } from "../../utils/mqttResponse.js";
 
 export const startGameSession = async (
   req: FastifyRequest,
   reply: FastifyReply,
   app: FastifyInstance
 ) => {
-  const body = req.body as {
+  const { deviceId, deviceSecret, boardConf, path } = req.body as {
     deviceId: string;
     deviceSecret: string;
-    boardConf:string,
+    boardConf: string;
     path: Types.ObjectId;
   };
-
-  const { deviceId, deviceSecret, path , boardConf} = body;
 
   if (!deviceId || !deviceSecret) {
     return reply
@@ -26,45 +25,45 @@ export const startGameSession = async (
       .send({ ok: false, error: "deviceId, deviceSecret, path are required" });
   }
 
-  const userId =
-    (req as any).user?.id ?? (req as any).user?._id ?? "unknown";
+  const userId = (req as any).user?.id ?? (req as any).user?._id ?? "unknown";
 
   const deviceStatus = await isDeviceAvailable(userId);
-
   if (deviceStatus?.isAvailable === false) {
-    if (String(deviceStatus.userId) !== String(userId)) {
-      return sendError(reply, { message: "device is busy" });
-    } else {
-      return sendSuccess(reply, { message: "already connected" });
-    }
+    return String(deviceStatus.userId) !== String(userId)
+      ? sendError(reply, { message: "device is busy" })
+      : sendSuccess(reply, { message: "already connected" });
   }
-  
-  const sessionId = `s_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-  
-  
-  
+
+
   const sessionDoc = await createSession({
-    sessionId,
     userId,
     deviceId,
     deviceSecret,
     control: "online",
-    status: "starting",
+    status: "connecting",
   });
-  await connectDevice(deviceId,boardConf, deviceSecret, userId, sessionDoc._id);
+
+  await connectDevice(deviceId, boardConf, deviceSecret, userId, sessionDoc._id);
 
   const topic = `devices/${deviceId}/${deviceSecret}/cmd`;
-  const cmd = {
-    type: "start_session",
-    session_id: sessionDoc._id,
-    ts: Date.now(),
-  };
-
+  const responseTopic = `devices/${deviceId}/${deviceSecret}/status`; 
+  const cmd = { type: "start_session", session_id: sessionDoc._id, ts: Date.now() };
 
   app.mqtt.publish(topic, JSON.stringify(cmd), { qos: 1 });
 
-  return sendSuccess(reply, { message: "connected", data: { sessionId } });
+  try {
+    const deviceResp:any = await waitForMqttResponse(app.mqtt, responseTopic, sessionDoc._id, 15000);
+    await updateSessionDoc(sessionDoc,{status: "starting"})
+    return sendSuccess(reply, { message: "connected", data: { deviceResp } });
+  } catch(err) {
+    console.log(err)
+    await updateSessionDoc(sessionDoc,{status: "abandoned"})
+    await freeDevice(deviceId);
+    return sendError(reply, { message: "Unable to connect to device." });
+  }
 };
+
+
 
 export const getAllCompletedSession=async(req:FastifyRequest, reply:FastifyReply)=>{
   const limit = (req.query as any).limit
@@ -83,7 +82,6 @@ export const leaderboardController = async (req: any, reply: any) => {
   const type = String(req.query?.type ?? "games").toLowerCase();
   const boardConf = req.query.boardConf;
 
-  console.log(boardConf)
 
   let result;
   if (type === "games") {

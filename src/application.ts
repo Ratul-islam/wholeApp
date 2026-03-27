@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import websocket from "@fastify/websocket";
 
+
+import cors from '@fastify/cors'
 import { connectDB } from "./modules/config/db.js";
 import mqttPlugin from "./modules/mqtt/mqtt.js";
 
@@ -14,6 +16,13 @@ const __dirname = path.dirname(__filename);
 export async function buildApp() {
   const app = Fastify({ logger: true });
 
+
+
+      await app.register(cors, {
+          origin: ["*", "http://localhost:8081"],
+          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          credentials: true, 
+      });
   await connectDB();
 
 await app.register(websocket);
