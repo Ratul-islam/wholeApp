@@ -50,7 +50,7 @@ export async function handleMqttMessage(topic: string, msg: any) {
   if (msg.type === "session_started" && msg.session_id) {
     const upd = await Session.updateOne(
       { _id: msg.session_id },
-      { $set: { status: "connected" } }
+      { $set: { status: "in_game" } }
     );
 
     await broadcastDeviceByDeviceId(deviceId);

@@ -1,6 +1,6 @@
 import mongoose, { Types } from "mongoose";
-import { Session } from "../sessions/sessions.model";
-import { PathStats } from "./pathStatus.model";
+import { Session } from "../sessions/sessions.model.js";
+import { PathStats } from "./pathStatus.model.js";
 import { PipelineStage } from "mongoose";
 
 
