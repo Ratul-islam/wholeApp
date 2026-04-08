@@ -46,7 +46,7 @@ const ALLOWED_UPDATES = new Set([
 export const updateSessionDoc = async (
   session: any,
   updates: Partial<{
-    status: "starting" | "paused" | "preset_loaded" | "in_game" | "completed" | "abandoned";
+    status: "connecting"|"starting" | "paused" | "preset_loaded" | "in_game" | "completed" | "abandoned";
     score: number;
     correct: number;
     wrong: number;
@@ -223,13 +223,21 @@ export const getSessionsByPathPaginated = async (
 ) => {
   const { skip, limit } = opts;
 
-  return Session.find({ pathId, status: "completed" })
+  const gg= await Session.find({ pathId, status: "completed" })
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .populate("userId")
+    .populate({
+      path: "userId",
+      select: "firstName lastName email",
+    })
     .lean();
+
+ console.log(gg)
+    return gg;
 };
+
+
 
 export const countSessionsByPath = async (pathId: Types.ObjectId) => {
   return Session.countDocuments({ pathId });

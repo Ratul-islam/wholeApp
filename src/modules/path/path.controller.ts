@@ -18,6 +18,7 @@ export const savePath = async (
       isPublic?: boolean
     }
 
+    if(name.length >16) return sendError(reply, {message: "Path name cannot exceed 16 charecters", statusCode:403});
     await createPath((request as any).user.id, name , path , boardConf,isPublic)
     sendSuccess(reply, {message: "path created successfully"})
 }
@@ -53,7 +54,7 @@ export const getPathDetails = async (request: FastifyRequest, reply: FastifyRepl
   ]);
 
   const totalPages = Math.ceil(total / limit);
-
+// console.log(matches) 
   return sendSuccess(reply, {
     data: {
       path,

@@ -1,9 +1,10 @@
 import mongoose, { Types } from "mongoose";
+import { ref } from "node:process";
 
 const SessionSchema = new mongoose.Schema(
   {
     // sessionId: { type: String, required: true, unique: true, index: true },
-    userId: { type: Types.ObjectId, required: true, index: true },
+    userId: { type: Types.ObjectId, required: true, index: true, ref: "User" },
     countedInLeaderboard: { type: Boolean, default: false, index: true },
     deviceId: { type: String, required: true, index: true },
     deviceSecret: { type: String, required: true },
