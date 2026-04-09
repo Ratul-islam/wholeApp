@@ -25,13 +25,14 @@ export const loadPath= async(req:FastifyRequest, reply:FastifyReply, app:Fastify
     const path= await getPathById(pathId);
     const session =await getSessionById(id);
     console.log(session)
+    console.log(path)
     
 
 
     if(!path) return sendError(reply,{message:"no such path found"})
 
+      console.log("gg")
       if(!session) return sendError(reply,{message:"no such game found"})
-        console.log("gg")
     if(session.control=="manual") return sendError(reply,{message: "device is in manual mode"});
     const topic = `devices/${session?.deviceId}/${session?.deviceSecret}/cmd`;
     const cmd = {

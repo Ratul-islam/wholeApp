@@ -56,34 +56,78 @@ export const savedPathService = {
     await SavedPath.deleteOne({ userId, _id: pathId });
     return { ok: true };
   },
-
-  async listSaved(params: { userId: string; page?: number; limit?: number; q?: string }) {
+  
+  async listSaved(params: { userId: string; page?: number; limit?: number; q?: string; boardConf?: string }) {
     const userId = toObjectId(params.userId);
 
     const page = Math.max(1, Number(params.page ?? 1));
     const limit = Math.min(50, Math.max(1, Number(params.limit ?? 10)));
     const skip = (page - 1) * limit;
 
-    const q = String(params.q ?? "").trim().toLowerCase();
-    const nameFilter = q
-      ? { snapshotName: { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" } }
-      : {};
+    const q = String(params.q ?? "").trim();
+    const regexQuery = q 
+      ? { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" } 
+      : null;
 
-    const [total, rows] = await Promise.all([
-      SavedPath.countDocuments({ userId, ...nameFilter }),
-      SavedPath.find({ userId, ...nameFilter })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+    // Grab boardConf from params if the frontend sends it
+    const exactBoardConf = String(params.boardConf ?? "").trim();
+
+    // 1. Build the Aggregation Pipeline
+    const pipeline: any[] = [
+      { $match: { userId } },
+      {
+        $lookup: {
+          from: "paths",
+          localField: "pathId",
+          foreignField: "_id",
+          as: "pathDoc",
+        },
+      },
+      {
+        $unwind: {
+          path: "$pathDoc",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ];
+
+    // 2. Add Search Filter (Searching snapshotName OR populated boardConf)
+    if (regexQuery) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { snapshotName: regexQuery },
+            { "pathDoc.boardConf": regexQuery }
+          ]
+        }
+      });
+    }
+
+    // 3. Add Exact BoardConf match (if device is connected and frontend passes it)
+    if (exactBoardConf) {
+      pipeline.push({
+        $match: {
+          "pathDoc.boardConf": exactBoardConf
+        }
+      });
+    }
+
+    // 4. Execute Count and Pagination Concurrently
+    const [totalResult, rows] = await Promise.all([
+      SavedPath.aggregate([...pipeline, { $count: "total" }]),
+      SavedPath.aggregate([
+        ...pipeline,
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit }
+      ])
     ]);
 
-    const pathIds = rows.map((r) => r.pathId);
-    const originals = await Path.find({ _id: { $in: pathIds } }).lean();
-    const originalMap = new Map<string, any>(originals.map((p) => [String(p._id), p]));
+    const total = totalResult.length > 0 ? totalResult[0].total : 0;
 
-    const data: SavedPathDTO[] = rows.map((r) => {
-      const live = originalMap.get(String(r.pathId));
+    // 5. Map the Data to your DTO
+    const data = rows.map((r: any) => {
+      const live = r.pathDoc;
       const useLive = !!live;
 
       return {
@@ -92,7 +136,14 @@ export const savedPathService = {
         ownerId: String(r.ownerId),
         userId: String(r.userId),
         name: useLive ? String(live.name ?? "") : String(r.snapshotName ?? ""),
-        path: useLive ? (Array.isArray(live.path) ? live.path : []) : (Array.isArray(r.snapshotPath) ? r.snapshotPath : []),
+        path: useLive 
+          ? (Array.isArray(live.path) ? live.path : []) 
+          : (Array.isArray(r.snapshotPath) ? r.snapshotPath : []),
+        
+        // --- THIS WAS MISSING ---
+        boardConf: useLive ? String(live.boardConf ?? "") : "",
+        // ------------------------
+
         originDeleted: !useLive,
         createdAt: String(r.createdAt ?? ""),
         updatedAt: String(r.updatedAt ?? ""),

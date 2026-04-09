@@ -9,7 +9,7 @@ const SessionSchema = new mongoose.Schema(
     deviceId: { type: String, required: true, index: true },
     deviceSecret: { type: String, required: true },
     control: {type:String, required:true},
-    pathId: { type: Types.ObjectId, ref:"path" },
+    pathId: { type: Types.ObjectId, ref:"Path" },
     time: { type: Number },
 
     status: {

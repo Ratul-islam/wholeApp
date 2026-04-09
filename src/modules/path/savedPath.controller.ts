@@ -42,10 +42,10 @@ export const savedPathController = {
 
       const page = qObj.page ? Number(qObj.page) : 1;
       const limit = qObj.limit ? Number(qObj.limit) : 10;
-      const q = qObj.q ? String(qObj.q) : "";
-
+      const q = qObj.boardConf ? String(qObj.boardConf) : "";
       const out = await savedPathService.listSaved({ userId, page, limit, q });
-      return sendSuccess(res, { message: "OK", data: {list:out.data, meta: out.meta }, });
+      console.log(out)
+      return sendSuccess(res, { message: "success", data: {list:out.data, meta: out.meta }, });
     } catch (e: any) {
       return sendError(res, { statusCode: 500, message: e?.message || "Failed to load saved" });
     }
