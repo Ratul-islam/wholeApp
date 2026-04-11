@@ -27,13 +27,13 @@ export const savePath = async (
 export const getPathDetails = async (request: FastifyRequest, reply: FastifyReply) => {
   const userId = (request as any).user?.id;
   const pathId = (request as any).params.pathId;
-
   const query = (request as any).query ?? {};
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
   const skip = (page - 1) * limit;
-
+  
   const path = await getPathById(pathId);
+  console.log("gg")
   if (!path) {
     return sendError(reply, {
       message: "No such path exists",

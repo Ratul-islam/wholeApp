@@ -48,12 +48,14 @@ export const getAllPath = async (
   };
 };
 
-
 export const getPathById = async (id: Types.ObjectId) => {
-    const allPath = await Path.findOne({_id: id})
-     return allPath
+  const allPath = await Path.findOne({ _id: id })
+    .populate({
+      path: "userId",
+      select: "firstName lastName _id",
+    })
+  return allPath
 }
-
 
 export const getPathAllByUserId = async (id: Types.ObjectId, sameUser?:boolean) => {
     const allPath = await (sameUser ? Path.find({userId: id}): Path.find({userId: id, isPublic: true}))

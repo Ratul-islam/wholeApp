@@ -1,12 +1,12 @@
 import mongoose, { Types } from "mongoose";
 const SessionSchema = new mongoose.Schema({
     // sessionId: { type: String, required: true, unique: true, index: true },
-    userId: { type: Types.ObjectId, required: true, index: true },
+    userId: { type: Types.ObjectId, required: true, index: true, ref: "User" },
     countedInLeaderboard: { type: Boolean, default: false, index: true },
     deviceId: { type: String, required: true, index: true },
     deviceSecret: { type: String, required: true },
     control: { type: String, required: true },
-    pathId: { type: Types.ObjectId, ref: "path" },
+    pathId: { type: Types.ObjectId, ref: "Path" },
     time: { type: Number },
     status: {
         type: String,

@@ -7,6 +7,7 @@ export const createSession = async (payload) => {
 };
 export const getAllSessionService = async (userId, limit) => {
     const games = await Session.find({ userId, status: "completed" })
+        .populate("pathId")
         .sort({ endedAt: -1, createdAt: -1 })
         .limit(limit)
         .lean();
@@ -159,12 +160,19 @@ export const getUserStatsService = async (userId) => {
 };
 export const getSessionsByPathPaginated = async (pathId, opts) => {
     const { skip, limit } = opts;
-    return Session.find({ pathId, status: "completed" })
-        .sort({ createdAt: -1 })
+    const gg = await Session.find({ pathId, status: "completed" })
+        .sort({
+        score: -1,
+        time: 1
+    })
         .skip(skip)
         .limit(limit)
-        .populate("userId")
+        .populate({
+        path: "userId",
+        select: "firstName lastName email",
+    })
         .lean();
+    return gg;
 };
 export const countSessionsByPath = async (pathId) => {
     return Session.countDocuments({ pathId });

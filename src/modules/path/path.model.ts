@@ -2,7 +2,7 @@ import mongoose, { Types } from "mongoose";
 
 const pathSchema = new mongoose.Schema(
  {
-    userId: { type: Types.ObjectId, required: true, index: true, ref: "user" },
+    userId: { type: Types.ObjectId, required: true, index: true, ref: "User" },
     name: { type: String, default: "Untitled Route" },
     path: { type: Array, default: [] },
     boardConf: {

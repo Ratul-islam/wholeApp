@@ -5,6 +5,8 @@ import mongoose from "mongoose";
 import { countSessionsByPath, getSessionsByPathPaginated } from "../sessions/sessions.services.js";
 export const savePath = async (request, reply, app) => {
     const { name, path, boardConf, isPublic } = request.body;
+    if (name.length > 16)
+        return sendError(reply, { message: "Path name cannot exceed 16 charecters", statusCode: 403 });
     await createPath(request.user.id, name, path, boardConf, isPublic);
     sendSuccess(reply, { message: "path created successfully" });
 };
@@ -33,6 +35,7 @@ export const getPathDetails = async (request, reply) => {
         countSessionsByPath(path._id),
     ]);
     const totalPages = Math.ceil(total / limit);
+    // console.log(matches) 
     return sendSuccess(reply, {
         data: {
             path,
